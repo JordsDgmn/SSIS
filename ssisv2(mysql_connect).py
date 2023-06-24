@@ -51,14 +51,12 @@ def search_student():
             print("- - - MySQL connection closed - - -")
 
 def insert_student():
-
-
     try:
         con = mysql.connector.connect(
-        host='127.0.0.1',
-        user='root',
-        password='ssis123',
-        database='ssis_v2'
+            host='127.0.0.1',
+            user='root',
+            password='ssis123',
+            database='ssis_v2'
         )
         student_id = input("[ press enter key to cancel ] \n \n Enter student ID: ")
         if student_id == "":
@@ -66,24 +64,33 @@ def insert_student():
         name = input("Enter Student Name: ")
         gender = input("Enter Gender (M/F): ")
         year_level = input("Enter Student Year Level: ")
-        course = input("Enter Course: ")
+        course_name = input("Enter Course: ")
         course_code = input("Enter Course Code (ex. BSCS): ")
-        
-        query = "INSERT INTO students (ID, NAME, GENDER, YEAR_LEVEL, COURSE, COURSE_CODE) VALUES (%s, %s, %s, %s, %s, %s)"
-        values = (student_id, name, gender, year_level, course, course_code)
+
+        query = "INSERT INTO students (ID, NAME, GENDER, YEAR_LEVEL, COURSE_CODE) VALUES (%s, %s, %s, %s, %s)"
+        values = (student_id, name, gender, year_level, course_code)
 
         cursor = con.cursor()
         cursor.execute(query, values)
         con.commit()
         cursor.close()
 
+        course_query = "INSERT INTO courses (course_code, course_name) VALUES (%s, %s)"
+        course_values = (course_code, course_name)
+
+        cursor = con.cursor()
+        cursor.execute(course_query, course_values)
+        con.commit()
+        cursor.close()
+
         print("Successfully Inserted Record!")
-    except Error as error:
+    except mysql.connector.Error as error:
         print("Insert data failed:", error)
     finally:
         if con.is_connected():
+            con.close()
             print("- - - MySQL connection closed - - -")
-            
+
 def update_student_info():
     try:
         con = mysql.connector.connect(
@@ -126,25 +133,22 @@ def update_student_info():
                 print("Student Name:", result[1])
                 print("Gender:", result[2])
                 print("Year Level:", result[3])
-                print("Course:", result[4])
                 print("Course Code:", result[5])
                 
                 new_student_id = input("Enter new student ID (leave empty to keep the same): ")
                 new_name = input("Enter new name (leave empty to keep the same): ")
                 new_gender = input("Enter new gender (M/F) (leave empty to keep the same): ")
                 new_year_level = input("Enter new year level (leave empty to keep the same): ")
-                new_course = input("Enter new course (leave empty to keep the same): ")
                 new_course_code = input("Enter new course code (leave empty to keep the same): ")
                 
 
                 if new_name or new_gender or new_year_level or new_course or new_course_code or new_student_id:
-                    update_query = "UPDATE students SET NAME = %s, GENDER = %s, YEAR_LEVEL = %s, COURSE = %s, COURSE_CODE = %s, ID = %s WHERE ID = %s"
+                    update_query = "UPDATE students SET NAME = %s, GENDER = %s, YEAR_LEVEL = %s, COURSE_CODE = %s, ID = %s WHERE ID = %s"
                     update_values = (
                         new_student_id if new_student_id else result[0],
                         new_name if new_name else result[1],
                         new_gender if new_gender else result[2],
                         new_year_level if new_year_level else result[3],
-                        new_course if new_course else result[4],
                         new_course_code if new_course_code else result[5],
                         
                         student_id
@@ -229,7 +233,7 @@ def list_students():
             password='ssis123',
             database='ssis_v2'
         )
-        query = "SELECT ID, NAME, COURSE FROM students"
+        query = "SELECT ID, NAME, COURSE_CODE FROM students"
 
         cursor = con.cursor()
         cursor.execute(query)
@@ -271,9 +275,9 @@ def search_course():
             return
 
         if search_choice == '1':
-            course_id = input("Enter course ID to search: ")
-            query = "SELECT * FROM courses WHERE course_id = %s"
-            values = (course_id,)
+            course_code = input("Enter course ID to search: ")
+            query = "SELECT * FROM courses WHERE course_code = %s"
+            values = (course_code,)
         elif search_choice == '2':
             course_name = input("Enter course name to search: ")
             query = "SELECT * FROM courses WHERE course_name = %s"
@@ -309,13 +313,13 @@ def insert_course():
             password='ssis123',
             database='ssis_v2'
         )
-        course_id = input("[ press enter key to cancel ] \n \n Enter course ID: ")
-        if course_id == "":
-            return
         course_name = input("[ press enter key to cancel ] \n \n Enter course name: ")
+        if course_name == "":
+            return
+        course_code = input("[ press enter key to cancel ] \n \n Enter course code (i.e., BSCS): ")
         
-        query = "INSERT INTO courses (course_id, course_name) VALUES (%s, %s)"
-        values = (course_id, course_name)
+        query = "INSERT INTO courses (course_code, course_name) VALUES (%s, %s)"
+        values = (course_code, course_name)
 
         cursor = con.cursor()
         cursor.execute(query, values)
@@ -336,7 +340,7 @@ def list_courses():
             password='ssis123',
             database='ssis_v2'
         )
-        query = "SELECT course_id, course_name FROM courses"
+        query = "SELECT course_code, course_name FROM courses"
 
         cursor = con.cursor()
         cursor.execute(query)
@@ -367,15 +371,15 @@ def update_course_info():
             database='ssis_v2'
         )
 
-        query = "SELECT course_id, course_name FROM courses"
+        query = "SELECT course_code, course_name FROM courses"
         cursor = con.cursor()
         cursor.execute(query)
         courses = cursor.fetchall()
 
         if courses:
             print("List of Courses:")
-            for i, course in enumerate(courses, start=1):
-                print(f"{i}.) {course[0]}, {course[1]}")
+            for i, course_name in enumerate(courses, start=1):
+                print(f"{i}.) {course_name[0]}, {course_name[1]}")
 
             while True:
                 course_choice = input("[ press enter key to cancel ] \n \n Enter course number to edit: ")
@@ -387,9 +391,9 @@ def update_course_info():
                 else:
                     break
 
-            course_id = courses[int(course_choice) - 1][0]
-            query = "SELECT * FROM courses WHERE course_id = %s"
-            values = (course_id,)
+            course_code = courses[int(course_choice) - 1][0]
+            query = "SELECT * FROM courses WHERE course_code = %s"
+            values = (course_code,)
 
             cursor.execute(query, values)
             result = cursor.fetchone()
@@ -404,11 +408,11 @@ def update_course_info():
                
 
                 if new_name or new_code:
-                    update_query = "UPDATE courses SET course_name = %s, course_id = %s WHERE course_id = %s"
+                    update_query = "UPDATE courses SET course_name = %s, course_code = %s WHERE course_code = %s"
                     update_values = (
                         new_name if new_name else result[1],
                         new_code if new_code else result[0],
-                        course_id
+                        course_code
                     )
 
                     cursor.execute(update_query, update_values)
@@ -438,15 +442,15 @@ def delete_course():
             database='ssis_v2'
         )
 
-        query = "SELECT course_id, course_name FROM courses"
+        query = "SELECT course_code, course_name FROM courses"
         cursor = con.cursor()
         cursor.execute(query)
         courses = cursor.fetchall()
 
         if courses:
             print("List of Courses:")
-            for i, course in enumerate(courses, start=1):
-                print(f"{i}.) {course[0]}, {course[1]}")
+            for i, course_name in enumerate(courses, start=1):
+                print(f"{i}.) {course_name[0]}, {course_name[1]}")
 
             while True:
                 course_choice = input("[ press enter key to cancel ] \n \n Enter the number of the course to delete: ")
@@ -458,9 +462,9 @@ def delete_course():
                 else:
                     break
 
-            course_id = courses[int(course_choice) - 1][0]
-            query = "SELECT * FROM courses WHERE course_id = %s"
-            values = (course_id,)
+            course_code = courses[int(course_choice) - 1][0]
+            query = "SELECT * FROM courses WHERE course_code = %s"
+            values = (course_code,)
 
             cursor.execute(query, values)
             result = cursor.fetchone()
@@ -470,8 +474,8 @@ def delete_course():
                 print("Course ID:", result[0])
                 print("Course Name:", result[1])
 
-                delete_query = "DELETE FROM courses WHERE course_id = %s"
-                delete_values = (course_id,)
+                delete_query = "DELETE FROM courses WHERE course_code = %s"
+                delete_values = (course_code,)
 
                 cursor.execute(delete_query, delete_values)
                 con.commit()
@@ -489,6 +493,56 @@ def delete_course():
         if con.is_connected():
             print("- - - MySQL connection closed - - -")
 
+
+
+def view_by_course():
+    try:
+        connection = mysql.connector.connect(
+            host='127.0.0.1',
+            user='root',
+            password='ssis123',
+            database='ssis_v2'
+        )
+        
+        cursor = connection.cursor()
+
+        # Retrieve the list of courses
+        course_query = "SELECT course_code, course_name FROM courses"
+        cursor.execute(course_query)
+        result = cursor.fetchall()
+
+        if result:
+            print("\n \n -----List of Courses-----")
+            for row in result:
+                print("Course Code:", row[0])
+                print("Course Name:", row[1])
+                print("------------------------")
+        else:
+            print("No courses in database. Feel free to add.")
+
+        course_code = input("[ press enter key to cancel ] \n \n Enter course code: ")
+        if not course_code:
+            print("Operation canceled.")
+            cursor.close()
+            connection.close()
+            return
+
+        query = "SELECT name FROM students WHERE course_code = %s"
+        cursor.execute(query, (course_code,))
+
+        results = cursor.fetchall()
+
+        if cursor.rowcount == 0:
+            print(f"\n - - -No students found for the course '{course_code}'.- - -")
+        else:
+            print(f"\n Students enrolled in the course '{course_code}':")
+            for row in results:
+                print(row[0])
+
+        cursor.close()
+        connection.close()
+    except mysql.connector.Error as error:
+        print("An error occurred:", str(error))
 
 
 
@@ -510,7 +564,8 @@ while True:
     print("8. Update course information")
     print("9. Delete a course")
     print("10. List all courses")
-    print("11. Terminate connection\n")
+    print("11. View course enrollees\n")
+    print("12. Terminate connection\n")
     choice = input("Enter your choice: ")
 
     if choice == '1':
@@ -532,8 +587,10 @@ while True:
     elif choice == '9':
         delete_course()
     elif choice == '10':
-        list_courses()    
+        list_courses() 
     elif choice == '11':
+        view_by_course()
+    elif choice == '12':
         print("Terminating connection...")
         break
     else:
