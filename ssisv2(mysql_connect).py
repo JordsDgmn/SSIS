@@ -39,7 +39,7 @@ def search_student():
             print("Gender:", result[2])
             print("Year Level:", result[3])
             print("Course:", result[4])
-            print("Course Code:", result[5])
+           # print("Course Code:", result[5])
         else:
             print("!- - - -Student not found.- - - -!")
 
@@ -91,6 +91,10 @@ def insert_student():
             con.close()
             print("- - - MySQL connection closed - - -")
 
+import mysql.connector
+
+import mysql.connector
+
 def update_student_info():
     try:
         con = mysql.connector.connect(
@@ -133,7 +137,7 @@ def update_student_info():
                 print("Student Name:", result[1])
                 print("Gender:", result[2])
                 print("Year Level:", result[3])
-                print("Course Code:", result[5])
+                print("Course Code:", result[4])
                 
                 new_student_id = input("Enter new student ID (leave empty to keep the same): ")
                 new_name = input("Enter new name (leave empty to keep the same): ")
@@ -142,14 +146,14 @@ def update_student_info():
                 new_course_code = input("Enter new course code (leave empty to keep the same): ")
                 
 
-                if new_name or new_gender or new_year_level or new_course or new_course_code or new_student_id:
-                    update_query = "UPDATE students SET NAME = %s, GENDER = %s, YEAR_LEVEL = %s, COURSE_CODE = %s, ID = %s WHERE ID = %s"
+                if new_student_id or new_name or new_gender or new_year_level or new_course_code:
+                    update_query = "UPDATE students SET ID = %s, NAME = %s, GENDER = %s, YEAR_LEVEL = %s, COURSE_CODE = %s WHERE ID = %s"
                     update_values = (
                         new_student_id if new_student_id else result[0],
                         new_name if new_name else result[1],
                         new_gender if new_gender else result[2],
                         new_year_level if new_year_level else result[3],
-                        new_course_code if new_course_code else result[5],
+                        new_course_code if new_course_code else result[4],
                         
                         student_id
                     )
@@ -166,11 +170,13 @@ def update_student_info():
             print("No students found.")
 
         cursor.close()
-    except Error as error:
+    except mysql.connector.Error as error:
         print("Error occurred while updating student information:", error)
     finally:
         if con.is_connected():
+            con.close()
             print("- - - MySQL connection closed - - -")
+
 
 def delete_student():
     try:
@@ -266,7 +272,7 @@ def search_course():
         )
 
         print("[ press enter key to cancel ]")
-        search_choice = input("\n\nSearch by: \n\n1. Course ID\n2. Course Name\n\nEnter your choice: ")
+        search_choice = input("\n\nSearch by: \n\n1. Course Code\n2. Course Name\n\nEnter your choice: ")
         if search_choice == '':
             print("Search canceled.")
             return
@@ -275,7 +281,7 @@ def search_course():
             return
 
         if search_choice == '1':
-            course_code = input("Enter course ID to search: ")
+            course_code = input("Enter course code to search: ")
             query = "SELECT * FROM courses WHERE course_code = %s"
             values = (course_code,)
         elif search_choice == '2':
@@ -289,17 +295,18 @@ def search_course():
 
         if result:
             print("\n -----Course found!-----\n ")
-            print("Course ID:", result[0])
+            print("Course Code:", result[0])
             print("Course Name:", result[1])
         else:
             print("!- - - -Course not found.- - - -!")
 
         cursor.close()
-    except Error as error:
-        print("Error occurred while searching for course:", error)
+    except mysql.connector.Error as error:
+        print("Error occurred while searching for the course:", error)
     finally:
-        if con.is_connected():
-            print("- - - MySQL connection closed - - -")
+        con.close()
+        print("- - - MySQL connection closed - - -")
+        return 
 
             
             
@@ -349,7 +356,7 @@ def list_courses():
         if result:
             print("\n \n -----List of Courses-----")
             for row in result:
-                print("Course ID:", row[0])
+                print("Course Code:", row[0])
                 print("Course Name:", row[1])
                 print("------------------------")
         else:
@@ -405,7 +412,6 @@ def update_course_info():
 
                 new_code = input("Enter new code (leave empty to keep the same): ")
                 new_name = input("Enter new name (leave empty to keep the same): ")
-               
 
                 if new_name or new_code:
                     update_query = "UPDATE courses SET course_name = %s, course_code = %s WHERE course_code = %s"
@@ -427,11 +433,13 @@ def update_course_info():
             print("No courses found.")
 
         cursor.close()
-    except Error as error:
+    except mysql.connector.Error as error:
         print("Error occurred while updating course information:", error)
     finally:
-        if con.is_connected():
-            print("- - - MySQL connection closed - - -")
+        con.close()
+        print("- - - MySQL connection closed - - -")
+        return
+        
 
 def delete_course():
     try:
@@ -471,7 +479,7 @@ def delete_course():
 
             if result:
                 print("\n \n -----Course Information-----")
-                print("Course ID:", result[0])
+                print("Course Code:", result[0])
                 print("Course Name:", result[1])
 
                 delete_query = "DELETE FROM courses WHERE course_code = %s"
@@ -479,6 +487,8 @@ def delete_course():
 
                 cursor.execute(delete_query, delete_values)
                 con.commit()
+                cursor.fetchall() 
+
                 print("Course deleted successfully!")
             else:
                 print("!- - - -Course not found.- - - -!")
@@ -490,8 +500,8 @@ def delete_course():
     except Error as error:
         print("Error occurred while deleting course:", error)
     finally:
-        if con.is_connected():
-            print("- - - MySQL connection closed - - -")
+        con.close()
+        print("- - - MySQL connection closed - - -")
 
 
 
@@ -506,7 +516,6 @@ def view_by_course():
         
         cursor = connection.cursor()
 
-        # Retrieve the list of courses
         course_query = "SELECT course_code, course_name FROM courses"
         cursor.execute(course_query)
         result = cursor.fetchall()
