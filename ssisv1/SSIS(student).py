@@ -129,7 +129,7 @@ def search_student_by_name():
             if len(row) >= 3 and student_name in row[1]:
                 if not found:
                     print("\n -- Matches found! -- \n")
-                print(f"Student ID: {row[0]}, Student Name: {row[1]}, Course Code: {row[2]}")
+                print(f"{i+1}. {row[0]}, {row[1]}, {row[2]}")
                 found = True
                 count += 1
         if not found:
