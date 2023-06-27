@@ -12,9 +12,9 @@ def main():
         choice = input("Enter your choice: ")
 
         if choice == '1':
-            subprocess.call(['py', 'SSIS(student)'])
+            subprocess.call(['py', 'SSIS(student).py'])
         elif choice == '2':
-            subprocess.call(['py', 'SSIS(course)'])
+            subprocess.call(['py', 'SSIS(course).py'])
         elif choice == '3':
             print("...Exiting Program. ")
             break
