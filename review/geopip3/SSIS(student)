@@ -1,34 +1,48 @@
 import csv
-import os.path #checks if file exists
+import os.path
+import os
 
 STUDENT_FILE = 'students.csv'
 
 
 def add_student():
-    with open(STUDENT_FILE, mode='a', newline='') as file:
-        writer = csv.writer(file)
+    with open(STUDENT_FILE, mode='r') as file:
+        reader = csv.reader(file)
+        students = list(reader)
+
+    existing_ids = [student[0] for student in students]
+
+    while True:
         student_id = input("[ press enter key to cancel ] \n \n Enter Student ID: ")
         if student_id == "":
             return
-        student_name = input("[ press enter key to cancel ] \n \n Enter student name: ")
-        writer.writerow([student_id, student_name])
-        print("\n \n Student added successfully.")
+        elif student_id in existing_ids:
+            print("Student ID already exists. Please enter a unique ID.")
+        else:
+            break
+
+    student_name = input("[ press enter key to cancel ] \n \n Enter student name: ")
+    course_code = input("[ press enter key to cancel ] \n \n Enter course code: ")
+
+    with open(STUDENT_FILE, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([student_id, student_name, course_code])
+    print("\n \n Student added successfully.")
+
 
 def delete_student():
     with open(STUDENT_FILE, mode='r') as file:
         reader = csv.reader(file)
         students = list(reader)
-    
+
     if not students:
         print("No students found.")
         return
 
-   
     print("List of students:")
     for i, student in enumerate(students):
-        print(f"{i+1}. Student ID: {student[0]}, Student Name: {student[1]}")
+        print(f"{i+1}. Student ID: {student[0]}, Student Name: {student[1]}, Course Code: {student[2]}")
 
-   
     while True:
         selection = input("[ press enter key to cancel ] \n \n Enter the number of the student to delete: ")
         if selection == "":
@@ -42,14 +56,12 @@ def delete_student():
         except ValueError:
             print("Invalid selection. Please enter a number between 1 and", len(students))
 
-    student_id = students[selection-1][0]
+    student_id = students[selection - 1][0]
     rows = [row for row in students if row[0] != student_id]
     with open(STUDENT_FILE, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(rows)
     print("Student deleted successfully.")
-
-
 
 
 def edit_student():
@@ -63,7 +75,7 @@ def edit_student():
 
     print("Students:")
     for i, student in enumerate(students):
-        print(f"{i+1}. {student[0]} - {student[1]}")
+        print(f"{i + 1}. {student[0]} - {student[1]}")
 
     while True:
         choice = input("[ press enter key to cancel ] \n \n Enter the number of the student to edit: ")
@@ -77,7 +89,7 @@ def edit_student():
                 print("Invalid choice. Please enter a valid number.")
         except ValueError:
             print("Invalid choice. Please enter a valid number.")
-            
+
     student_id = students[student_index][0]
     with open(STUDENT_FILE, mode='w', newline='') as file:
         writer = csv.writer(file)
@@ -85,7 +97,7 @@ def edit_student():
         new_student_name = input("[ press enter key to cancel ] \n \n Enter new student name: ")
         for i, student in enumerate(students):
             if i == student_index:
-                writer.writerow([new_student_id, new_student_name])
+                writer.writerow([new_student_id, new_student_name, student[2]])
             else:
                 writer.writerow(student)
         print("\n \n Student edited successfully.")
@@ -98,13 +110,8 @@ def list_students():
     with open(STUDENT_FILE, mode='r') as file:
         reader = csv.reader(file)
         for row in reader:
-            if len(row) >= 2:
-                print(f"Student ID: {row[0]}, Student Name: {row[1]}")
-
-               
-
-
-
+            if len(row) >= 3:
+                print(f"Student ID: {row[0]}, Student Name: {row[1]}, Course Code: {row[2]}")
 
 
 def search_student_by_name():
@@ -114,13 +121,18 @@ def search_student_by_name():
     with open(STUDENT_FILE, mode='r') as file:
         reader = csv.reader(file)
         found = False
+        count = 0
         for row in reader:
             if student_name in row[1]:
-                print("\n -- Match found! -- \n")
-                print(f"Student ID: {row[0]}, Student Name: {row[1]}")
+                if not found:
+                    print("\n -- Matches found! -- \n")
+                print(f"Student ID: {row[0]}, Student Name: {row[1]}, Course Code: {row[2]}")
                 found = True
+                count += 1
         if not found:
             print(f"\n \n No student with name {student_name} found!")
+        else:
+            print(f"\n \n Total matches found: {count}")
 
 
 def search_student_by_id():
@@ -130,17 +142,39 @@ def search_student_by_id():
     with open(STUDENT_FILE, mode='r') as file:
         reader = csv.reader(file)
         found = False
+        count = 0
         for row in reader:
             if row[0] == student_id:
-                print("\n -- Match found! -- \n")
-                print(f"Student ID: {row[0]}, Student Name: {row[1]}")
+                if not found:
+                    print("\n -- Matches found! -- \n")
+                print(f"Student ID: {row[0]}, Student Name: {row[1]}, Course Code: {row[2]}")
                 found = True
+                count += 1
         if not found:
             print(f"\n \n No student with ID {student_id} found!")
-            
-            
-            
+        else:
+            print(f"\n \n Total matches found: {count}")
 
+
+def search_student_by_course():
+    course_code = input("[ press enter key to cancel ] \n \n Enter course code to search: ")
+    if course_code == "":
+        return
+    with open(STUDENT_FILE, mode='r') as file:
+        reader = csv.reader(file)
+        found = False
+        count = 0
+        for row in reader:
+            if row[2] == course_code:
+                if not found:
+                    print("\n -- Matches found! -- \n")
+                print(f"Student ID: {row[0]}, Student Name: {row[1]}, Course Code: {row[2]}")
+                found = True
+                count += 1
+        if not found:
+            print(f"\n \n No student with course code {course_code} found!")
+        else:
+            print(f"\n \n Total matches found: {count}")
 
 
 if not os.path.exists(STUDENT_FILE):
@@ -149,18 +183,24 @@ if not os.path.exists(STUDENT_FILE):
 while True:
     print("""
     Choose an action:
+    0. Go back to main menu
     1. Add a student
     2. Delete a student
     3. Edit a student
     4. List all students
     5. Search for a student by name
     6. Search for a student by ID
-    7. Quit
+    7. Search for students by course code
+    8. Quit
     """)
 
     choice = input("Enter your choice: ")
 
-    if choice == '1':
+    if choice == '0':
+        import os
+        os.system('python SSIS(main).py')
+        break
+    elif choice == '1':
         add_student()
     elif choice == '2':
         delete_student()
@@ -173,6 +213,8 @@ while True:
     elif choice == '6':
         search_student_by_id()
     elif choice == '7':
+        search_student_by_course()
+    elif choice == '8':
         print("...Exiting Program")
         break
     else:
