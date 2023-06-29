@@ -8,10 +8,9 @@ STUDENT_FILE = 'students.csv'
 def add_student():
     with open(STUDENT_FILE, mode='r') as file:
         reader = csv.reader(file)
-        students = list(reader)
+        row = list(reader)
 
-    existing_ids = [student[0] for student in students]
-
+    existing_ids = [row[0] for row in reader]
     while True:
         student_id = input("[ press enter key to cancel ] \n \n Enter Student ID: ")
         if student_id == "":
@@ -29,40 +28,29 @@ def add_student():
         writer.writerow([student_id, student_name, course_code])
     print("\n \n Student added successfully.")
 
-
-def delete_student():
+def add_student():
     with open(STUDENT_FILE, mode='r') as file:
         reader = csv.reader(file)
         students = list(reader)
 
-    if not students:
-        print("No students found.")
-        return
-
-    print("List of students:")
-    for i, student in enumerate(students):
-        print(f"{i+1}. {student}")
+    existing_ids = [row for row in students]
 
     while True:
-        selection = input("[ press enter key to cancel ] \n \n Enter the number of the student to delete: ")
-        if selection == "":
+        student_id = input("[ press enter key to cancel ] \n \n Enter Student ID: ")
+        if student_id == "":
             return
-
-        try:
-            selection = int(selection)
-            if selection < 1 or selection > len(students):
-                raise ValueError()
+        elif student_id in existing_ids:
+            print("Student ID already exists. Please enter a unique ID.")
+        else:
             break
-        except ValueError:
-            print("Invalid selection. Please enter a number between 1 and", len(students))
 
-    student_id = students[selection - 1][0]
-    rows = [row for row in students if row[0] != student_id]
-    with open(STUDENT_FILE, mode='w', newline='') as file:
+    student_name = input("[ press enter key to cancel ] \n \n Enter student name: ")
+    course_code = input("[ press enter key to cancel ] \n \n Enter course code: ")
+
+    with open(STUDENT_FILE, mode='a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerows(rows)
-    print("Student deleted successfully.")
-
+        writer.writerow([student_id, student_name, course_code])
+    print("\n \n Student added successfully.")
 
 def edit_student():
     with open(STUDENT_FILE, mode='r') as file:
@@ -179,9 +167,39 @@ def search_student_by_course():
         else:
             print(f"\n \n Total matches found: {count}")
 
+def delete_student():
+    with open(STUDENT_FILE, mode='r') as file:
+        reader = csv.reader(file)
+        students = list(reader)
 
-if not os.path.exists(STUDENT_FILE):
-    open(STUDENT_FILE, 'w').close()
+    if not students:
+        print("No students found.")
+        return
+
+    print("List of students:")
+    for i, student in enumerate(students):
+        print(f"{i+1}. {student}")
+
+    while True:
+        selection = input("[ press enter key to cancel ] \n \n Enter the number of the student to delete: ")
+        if selection == "":
+            return
+
+        try:
+            selection = int(selection)
+            if selection < 1 or selection > len(students):
+                raise ValueError()
+            break
+        except ValueError:
+            print("Invalid selection. Please enter a number between 1 and", len(students))
+
+    student_id = students[selection - 1][0]
+    rows = [row for row in students if len(row) >= 1 and row[0] != student_id]
+    with open(STUDENT_FILE, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(rows)
+    print("Student deleted successfully.")
+
 
 while True:
     print("""
